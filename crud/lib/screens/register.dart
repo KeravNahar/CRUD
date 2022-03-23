@@ -86,6 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
     else{
       sendData();
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomePage()),);
     }
   }
 
@@ -154,7 +155,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 onPressed: () {
                   sendData();
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomePage()),);
+                  validation();
                 },
                 child: Text("Register", style: TextStyle(
                     color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
