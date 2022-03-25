@@ -2,26 +2,16 @@ import 'package:crud/screens/widgets/text_field_no_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../EmployeeList.dart';
 import '../home.dart';
 class UpdateEmployeePage extends StatefulWidget {
   final String id;
   final String title;
-  final String nameDisplay;
-  final String emailDisplay;
-  final String numberDisplay;
-  final String addressDisplay;
-  final String aadharDisplay;
-  final String salaryDisplay;
+
   const UpdateEmployeePage({
     Key? key,
     required this.id,
     required this.title,
-    required this.nameDisplay,
-    required this.emailDisplay,
-    required this.numberDisplay,
-    required this.addressDisplay,
-    required this.aadharDisplay,
-    required this.salaryDisplay,
   }) : super(key: key);
 
   @override
@@ -30,6 +20,7 @@ class UpdateEmployeePage extends StatefulWidget {
 
 class _UpdateEmployeePageState extends State<UpdateEmployeePage> {
   late UserCredential userCredential;
+  final _formKey = GlobalKey<FormState>();
 
   GlobalKey<ScaffoldState> globalKey = GlobalKey<ScaffoldState>();
   TextEditingController name = TextEditingController();
@@ -39,15 +30,18 @@ class _UpdateEmployeePageState extends State<UpdateEmployeePage> {
   TextEditingController aadhar = TextEditingController();
   TextEditingController salary = TextEditingController();
 
-  Future sendData(id)async{
-    await FirebaseFirestore.instance.collection('EmployeeData').doc(id).update({
-      'email': email.text.trim(),
-      'username': name.text.trim(),
-      'number' : number.text.trim(),
-      'address':address.text.trim(),
-      'aadhar' : aadhar.text.trim(),
-      'salary':salary.text.trim(),
-    });
+  Future<void> updateUser(id, name, email, number,address,aadhar,salary) {
+    return FirebaseFirestore.instance.collection('EmployeeData')
+        .doc(id)
+        .update({
+      'email': email,
+      'username': name,
+      'number' : number,
+      'address':address,
+      'aadhar' : aadhar,
+      'salary':salary,})
+        .then((value) => print("User Updated"))
+        .catchError((error) => print("Failed to update user: $error"));
   }
 
   @override
@@ -58,68 +52,220 @@ class _UpdateEmployeePageState extends State<UpdateEmployeePage> {
           leading: IconButton(icon: Icon(Icons.arrow_back_rounded,color: Colors.white,),onPressed: (){
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => HomePage()),
+              MaterialPageRoute(builder: (context) => ViewPage()),
             );
           },),
           title:Text(widget.title, style:TextStyle(fontSize: 20, color: Colors.white) ,),
         ),
-        body: Container(
-          margin: EdgeInsets.symmetric(horizontal: 50),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              WidTextFieldNIC(
-                hintText: widget.nameDisplay,
-                obscureText: false,
-                controller: name,
-              ),
-              WidTextFieldNIC(
-                hintText: widget.emailDisplay,
-                obscureText: false,
-                controller: email,
-              ),
-              WidTextFieldNIC(
-                hintText: widget.numberDisplay,
-                obscureText: false,
-                controller: number,
-              ),
-              WidTextFieldNIC(
-                hintText: widget.addressDisplay,
-                obscureText: false,
-                controller: address,
-              ),
-              WidTextFieldNIC(
-                hintText: widget.aadharDisplay,
-                obscureText: false,
-                controller: aadhar,
-              ),
-              WidTextFieldNIC(
-                hintText: widget.salaryDisplay,
-                obscureText: false,
-                controller: salary,
+        body: Form(
+            key: _formKey,
+            // Getting Specific Data by ID
+            child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+              future: FirebaseFirestore.instance
+                  .collection('EmployeeData')
+                  .doc(widget.id)
+                  .get(),
+              builder: (_, snapshot) {
+                if (snapshot.hasError) {
+                  print('Something Went Wrong');
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                var data = snapshot.data!.data();
+                var name = data!['username'];
+                var aadhar = data['aadhar'];
+                var email = data['email'];
+                var mobile = data['number'];
+                var aadress = data['address'];
+                var salary = data['salary'];
 
-              ),
-                  Container(
-                    height: 60,
-                    width : 200,
-                    child: RaisedButton(
-                      color: Colors.red[900],
-                      shape: RoundedRectangleBorder(
-                          side: BorderSide(color: Colors.black12),
-                          borderRadius: BorderRadius.circular(30)
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+                  child: ListView(
+                    children: [
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          initialValue: name,
+                          autofocus: false,
+                          onChanged: (value) => name = value,
+                          decoration: InputDecoration(
+                            labelText: 'Name: ',
+                            labelStyle: TextStyle(fontSize: 20.0),
+                            border: UnderlineInputBorder(
+                                borderSide:  BorderSide(color: Colors.grey)
+                            ),
+                            errorStyle:
+                            TextStyle(color: Colors.redAccent, fontSize: 15),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Name';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
-                      onPressed: () {
-                        sendData(widget.id);
-                        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => HomePage()),);
-                      },
-                      child: Text("Update Data", style: TextStyle(
-                          color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
-                    ),
+                      SizedBox(height: 20,),
+
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          initialValue: email,
+                          autofocus: false,
+                          onChanged: (value) => email = value,
+                          decoration: InputDecoration(
+                            labelText: 'Email Address: ',
+                            labelStyle: TextStyle(fontSize: 20.0),
+                            border: UnderlineInputBorder(
+                                borderSide:  BorderSide(color: Colors.grey)
+                            ),
+                            errorStyle:
+                            TextStyle(color: Colors.redAccent, fontSize: 15),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Email';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          initialValue: mobile,
+                          autofocus: false,
+                          onChanged: (value) => mobile = value,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            labelText: 'Mobile Number: ',
+                            labelStyle: TextStyle(fontSize: 20.0),
+                            border: UnderlineInputBorder(
+                                borderSide:  BorderSide(color: Colors.grey)
+                            ),
+                            errorStyle:
+                            TextStyle(color: Colors.redAccent, fontSize: 15),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Number';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          initialValue: aadress,
+                          autofocus: false,
+                          onChanged: (value) => aadress = value,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            labelText: 'Address: ',
+                            labelStyle: TextStyle(fontSize: 20.0),
+                            border: UnderlineInputBorder(
+                                borderSide:  BorderSide(color: Colors.grey)
+                            ),
+                            errorStyle:
+                            TextStyle(color: Colors.redAccent, fontSize: 15),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Address';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          initialValue: aadhar,
+                          autofocus: false,
+                          onChanged: (value) => aadhar = value,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            labelText: 'Aadhar Number: ',
+                            labelStyle: TextStyle(fontSize: 20.0),
+                            border: UnderlineInputBorder(
+                                borderSide:  BorderSide(color: Colors.grey)
+                            ),
+                            errorStyle:
+                            TextStyle(color: Colors.redAccent, fontSize: 15),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter aadhar';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20,),
+
+                      Container(
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
+                        child: TextFormField(
+                          initialValue: salary,
+                          autofocus: false,
+                          onChanged: (value) => salary = value,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            labelText: 'Salary: ',
+                            labelStyle: TextStyle(fontSize: 20.0),
+                            border: UnderlineInputBorder(
+                                borderSide:  BorderSide(color: Colors.grey)
+                            ),
+                            errorStyle:
+                            TextStyle(color: Colors.redAccent, fontSize: 15),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please Enter Salary';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 30,),
+                      Container(
+                        child: Container(
+                          height: 60,
+                          width : 200,
+                          child: RaisedButton(
+                              color: Colors.red[900],
+                              shape: RoundedRectangleBorder(
+                                  side: BorderSide(color: Colors.black12),
+                                  borderRadius: BorderRadius.circular(30)
+                              ),
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  updateUser(widget.id, name, email, mobile,aadress,aadhar,salary);
+                                  Navigator.pop(context);
+                                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => ViewPage()),);
+                                }
+                              },
+                              child: Text("Update", style: TextStyle(
+                                  color: Colors.white,fontWeight: FontWeight.bold,fontSize: 20),),
+                            ),
+                        ),
+                      )
+                    ],
                   ),
-            ],
-          ),
-        )
+                );
+              },
+            )),
     );
   }
 }
