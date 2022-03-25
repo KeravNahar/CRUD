@@ -129,12 +129,7 @@ class _ListEmployeePageState extends State<ListEmployeePage> {
                                       builder: (context) => UpdateEmployeePage(
                                           id: storedocs[i]['id'],
                                         title: storedocs[i]['Emp_id'],
-                                        nameDisplay: storedocs[i]['username'],
-                                        aadharDisplay: storedocs[i]['aadhar'],
-                                        addressDisplay: storedocs[i]['address'],
-                                        emailDisplay: storedocs[i]['email'],
-                                        numberDisplay: storedocs[i]['number'],
-                                        salaryDisplay:storedocs[i]['salary'] ,
+                                       
                                       ),
                                     ),
                                   )
